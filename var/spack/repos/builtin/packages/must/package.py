@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
 
-
 class Must(CMakePackage):
     """MUST detects usage errors of the Message Passing Interface (MPI)
     and reports them to the user. As MPI calls are complex and usage
@@ -15,10 +14,14 @@ class Must(CMakePackage):
     or do not manifest on a certain system or MPI implementation."""
 
     homepage = "https://www.i12.rwth-aachen.de/go/id/nrbe"
-    url = "https://hpc.rwth-aachen.de/must/files/MUST-v1.8.0-rc1.tar.gz"
+    url = "https://hpc.rwth-aachen.de/must/files/MUST-v1.8.0.tar.gz"
 
     maintainers = ["jgalarowicz", "dmont"]
 
+    version(
+        "1.8.0",
+        sha256="9754fefd2e4c8cba812f8b56a5dd929bc84aa599b2509305e1eb8518be0a8a39",
+    )
     version(
         "1.8.0-rc1",
         sha256="49fd2487fbd1aa41f4252c7e37efebd3f6ff48218c88e82f34b88d59348fe406",
@@ -43,6 +46,7 @@ class Must(CMakePackage):
     conflicts("+stackwalker +backward")
 
     depends_on("cmake@3.9:")
+    depends_on("cmake@3.21:", when="+typeart")
     depends_on("python@3.1.5:", type=("build", "link", "run"))
     # must test variant requires llvm
     depends_on("llvm@10.0.0:", when="+test")
@@ -68,24 +72,24 @@ class Must(CMakePackage):
 
         # Add in paths for finding package config files that tell us
         # where to find these packages
-        cmake_args = ["-DCMAKE_VERBOSE_MAKEFILE=ON", "-DCMAKE_BUILD_TYPE=Release"]
+        cmake_args = ["-DCMAKE_BUILD_TYPE=Release"]
 
         # check to see if the testing variant is enabled
         if spec.satisfies("+test"):
-            cmake_args.extend(["-DENABLE TESTS=On"])
+            cmake_args.extend(["-DENABLE_TESTS=On"])
 
         # check to see if the TypeArt variant is enabled
         if spec.satisfies("+typeart"):
-            cmake_args.extend(["-DENABLE TYPEART=On"])
+            cmake_args.extend(["-DENABLE_TYPEART=On"])
 
         # check to see if the Thread Sanitizer variant is enabled
         if spec.satisfies("+tsan"):
-            cmake_args.extend(["-DENABLE TSAN=On"])
+            cmake_args.extend(["-DENABLE_TSAN=On"])
         else:
             # if the Thread Sanitizer variant is disabled
             # send corresponding cmake argument to the cmake command
             if spec.satisfies("~tsan"):
-                cmake_args.extend(["-DENABLE TSAN=Off"])
+                cmake_args.extend(["-DENABLE_TSAN=Off"])
 
         # Since MUST version 1.8, MUST is configured with
         # backward-cpp support enabled by default. To install
@@ -93,14 +97,14 @@ class Must(CMakePackage):
         # -DUSE BACKWARD=Off must be explicitly set during the
         # configuration of MUST
         if spec.satisfies("~backward"):
-            cmake_args.extend(["-DUSE BACKWARD=Off"])
+            cmake_args.extend(["-DUSE_BACKWARD=Off"])
 
         if spec.satisfies("+stackwalker"):
-            cmake_args.extend(["-DUSE CALLPATH=On"])
-            cmake_args.extend(["-DSTACKWALKER INSTALL PREFIX=%s" % spec["dyninst"].prefix])
-            cmake_args.extend(["-DUSE BACKWARD=Off"])
+            cmake_args.extend(["-DUSE_CALLPATH=On"])
+            cmake_args.extend(["-DSTACKWALKER_INSTALL_PREFIX=%s" % spec["dyninst"].prefix])
+            cmake_args.extend(["-DUSE_BACKWARD=Off"])
         else:
             if spec.satisfies("+backward"):
-                cmake_args.extend(["-DUSE BACKWARD=On"])
+                cmake_args.extend(["-DUSE_BACKWARD=On"])
 
         return cmake_args
